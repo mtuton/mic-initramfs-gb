@@ -106,6 +106,9 @@ loglevel 3
     insmod /lib/modules/rfs_glue.ko
     insmod /lib/modules/rfs_fat.ko
     insmod /lib/modules/j4fs.ko
+    insmod /lib/modules/mbcache.ko
+    insmod /lib/modules/jbd2.ko
+    insmod /lib/modules/cifs.ko
 
     insmod /lib/modules/Si4709_driver.ko
 
@@ -126,21 +129,24 @@ on fs
     # mount yaffs2 mtd@system /system ro remount
     # mount yaffs2 mtd@userdata /data nosuid nodev
     # mount yaffs2 mtd@cache /cache nosuid nodev
-    mount rfs /dev/block/stl9 /system check=no
+    # mount rfs /dev/block/stl9 /system check=no
+    # mount ext4 /dev/block/stl9 /system noatime barrier=0 data=journal
 
     # Temp add for FY -> GB update problem 
     # After update GB, need to remove
-    copy /tmp/linker /system/bin/linker
-    copy /tmp/libc.so /system/lib/libc.so
-    copy /tmp/libcutils.so /system/lib/libcutils.so
-    copy /tmp/liblog.so /system/lib/liblog.so
-    copy /tmp/libz.so /system/lib/libz.so
-    copy /tmp/libstdc++.so /system/lib/libstdc++.so
+    # copy /tmp/linker /system/bin/linker
+    # copy /tmp/libc.so /system/lib/libc.so
+    # copy /tmp/libcutils.so /system/lib/libcutils.so
+    # copy /tmp/liblog.so /system/lib/liblog.so
+    # copy /tmp/libz.so /system/lib/libz.so
+    # copy /tmp/libstdc++.so /system/lib/libstdc++.so
 		
-    exec umount
+    # exec umount
     
-    mount rfs /dev/block/stl9 /system check=no
-    mount rfs /dev/block/stl9 /system ro remount
+    # mount rfs /dev/block/stl9 /system check=no
+    # mount rfs /dev/block/stl9 /system ro remount
+    mount ext4 /dev/block/stl9 /system noatime barrier=0 data=journal
+    mount ext4 /dev/block/stl9 /system remount ro
 
 # SEC_DMCRYPT for MC_CRYPT_ROOT before apply_disk_policy or apply_sec_devenc_init
     #chown system system /efs
@@ -159,13 +165,15 @@ on fs
     mkdir /data
 # SEC_DMCRYPT crypt flag added data
     # mount rfs /dev/block/mmcblk0p2 /data nosuid nodev check=no
-    mount rfs /dev/block/mmcblk0p2 /data nosuid nodev crypt check=no
+    # mount rfs /dev/block/mmcblk0p2 /data nosuid nodev crypt check=no
+    mount ext4 /dev/block/mmcblk0p2 /data noatime data=ordered barrier=1
     chown system system /data
     chmod 0771 /data    
 
     mkdir /dbdata
   #SEC_DMCRYPT crypt flag added
-    mount rfs /dev/block/stl10 /dbdata nosuid nodev crypt check=no
+    # mount rfs /dev/block/stl10 /dbdata nosuid nodev crypt check=no
+    mount ext4 /dev/block/stl10 /dbdata noatime barrier=0 data=ordered nodelalloc
     #mount rfs /dev/block/stl10 /dbdata nosuid nodev check=no
     chown system system /dbdata
     chmod 0771 /dbdata
@@ -179,7 +187,9 @@ on fs
     mkdir /dbdata/db-journal
     chown system system /dbdata/db-journal
     chmod 0777 /dbdata/db-journal
-    mount rfs /dev/block/stl11 /cache nosuid nodev check=no
+
+    # mount rfs /dev/block/stl11 /cache nosuid nodev check=no
+    mount ext4 /dev/block/stl11 /cache noatime barrier=0 data=writeback
 
     mkdir /mnt/.lfs 0755 root root
     mount j4fs /dev/block/stl6 /mnt/.lfs
@@ -803,4 +813,7 @@ service gpsd /system/vendor/bin/launch_gps.sh
     socket gps seqpacket 0660 gps system
     user gps
     group system inet
+
+service run_parts /scripts/run-parts.sh /system/etc/init.d
+    oneshot 
 
