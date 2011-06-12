@@ -1,1 +1,4 @@
 initramfs directory used when compiling new gingerbread kernels
+
+full-uncompressed - used in compiled kernels
+injected - used to inject into existing kernels
